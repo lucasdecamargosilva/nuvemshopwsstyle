@@ -309,7 +309,18 @@
             line-height: 1.5; margin-bottom: 20px;
             justify-content: center; text-align: center;
         }
-        .q-terms-row input { margin-top: 3px; cursor: pointer; accent-color: var(--c-ink); flex-shrink: 0; }
+        #q-modal-ia .q-terms-row input[type="checkbox"] {
+            -webkit-appearance: checkbox !important;
+            -moz-appearance: checkbox !important;
+            appearance: checkbox !important;
+            width: 16px !important; height: 16px !important;
+            min-width: 16px !important; min-height: 16px !important;
+            margin: 3px 0 0 0 !important; padding: 0 !important;
+            opacity: 1 !important; visibility: visible !important;
+            position: static !important; display: inline-block !important;
+            background: #fff !important; border: 1px solid #999 !important;
+            cursor: pointer; accent-color: var(--c-ink); flex-shrink: 0;
+        }
         .q-terms-row a { color: var(--c-ink); text-decoration: underline; text-underline-offset: 2px; }
 
         /* ── CTA buttons ── */
