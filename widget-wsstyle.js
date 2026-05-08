@@ -225,9 +225,11 @@
             color: var(--c-muted); margin-bottom: 8px;
         }
         .q-phone-wrap { margin-bottom: 28px; }
-        .q-input {
-            display: block; width: 100%; height: 52px;
-            padding: 0 16px; margin: 0;
+        #q-modal-ia .q-input {
+            display: block !important; width: 100% !important;
+            height: 52px !important; min-height: 52px !important; max-height: 52px !important;
+            line-height: 52px !important; box-sizing: border-box !important;
+            padding: 0 16px !important; margin: 0 !important;
             background: var(--c-surface); border: 1.5px solid transparent;
             border-bottom: 1.5px solid var(--c-line); border-radius: 0;
             font-size: 16px; font-family: var(--font-body); font-weight: 400;
@@ -641,6 +643,10 @@
 
 
     function init() {
+        // Idempotência: se já rodou nesta página (DOM Ready disparado 2x pelo GTM, ou navegação SPA), aborta
+        if (window.__PL_WSSTYLE_INITIALIZED__) return;
+        window.__PL_WSSTYLE_INITIALIZED__ = true;
+
         // --- FILTRO DE CATEGORIA (HAT) ---
         const productNameNormalized = (document.querySelector('h1.product__title,.product-single__title,h1')?.innerText || document.title).toUpperCase();
         if (productNameNormalized.includes('HAT')) {
