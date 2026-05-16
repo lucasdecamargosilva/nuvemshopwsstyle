@@ -1228,83 +1228,98 @@
 
         // ── GERAÇÃO PRINCIPAL ──
         async function runGeneration() {
-            const keyToUse = window.PROVOU_LEVOU_API_KEY;
-            if (!keyToUse || keyToUse.includes("COLOQUE_A_CHAVE_AQUI")) {
-                showError();
-                return;
-            }
 
-            const prodImg = selectedProductImgUrl || (document.querySelector('meta[property="og:image"]')?.content || '');
-            const prodName = document.querySelector('h1.product__title,.product-single__title,h1')?.innerText || document.title;
+            if (runGeneration._busy) return;
 
-            uploadStep.style.display = 'none';
-            document.getElementById('q-loading-box').style.display = 'flex';
+            runGeneration._busy = true;
 
             try {
-                const fd = new FormData();
-                fd.append('person_image', userPhoto, 'person.jpg');
-                fd.append('whatsapp', '55' + phoneInput.value.replace(/\D/g, ''));
-                fd.append('phone_raw', phoneInput.value);
-                fd.append('product_name', prodName);
-                fd.append('product_type', currentProduct.category);
-                fd.append('product_fit', currentProduct.fit);
-                fd.append('api_key', keyToUse);
-                if (pixPaymentId) fd.append('pix_payment_id', pixPaymentId);
-
-                if (currentProduct.category === 'top') {
-                    fd.append('height', '');
-                    fd.append('weight', '');
-                } else {
-                    fd.append('height', '');
-                    fd.append('weight', '');
-                    fd.append('cintura', '');
-                    fd.append('quadril', '');
+                const keyToUse = window.PROVOU_LEVOU_API_KEY;
+                if (!keyToUse || keyToUse.includes("COLOQUE_A_CHAVE_AQUI")) {
+                    showError();
+                    return;
                 }
 
-                if (prodImg) {
-                    try {
-                        const b = await fetch(prodImg).then(r => r.blob());
-                        fd.append('product_image', b, 'product.jpg');
-                    } catch (_) { }
-                }
+                const prodImg = selectedProductImgUrl || (document.querySelector('meta[property="og:image"]')?.content || '');
+                const prodName = document.querySelector('h1.product__title,.product-single__title,h1')?.innerText || document.title;
 
-                calculateFinalSize();
+                uploadStep.style.display = 'none';
+                document.getElementById('q-loading-box').style.display = 'flex';
 
-                const res = await fetch(WEBHOOK_PROVA, { method: 'POST', body: fd });
+                try {
+                    const fd = new FormData();
+                    fd.append('person_image', userPhoto, 'person.jpg');
+                    fd.append('whatsapp', '55' + phoneInput.value.replace(/\D/g, ''));
+                    fd.append('phone_raw', phoneInput.value);
+                    fd.append('product_name', prodName);
+                    fd.append('product_type', currentProduct.category);
+                    fd.append('product_fit', currentProduct.fit);
+                    fd.append('api_key', keyToUse);
+                    if (pixPaymentId) fd.append('pix_payment_id', pixPaymentId);
 
-                const contentType = res.headers.get("content-type") || "";
-                if (contentType.includes("application/json")) {
-                    const data = await res.json();
-                    if (data.error) {
+                    if (currentProduct.category === 'top') {
+                        fd.append('height', '');
+                        fd.append('weight', '');
+                    } else {
+                        fd.append('height', '');
+                        fd.append('weight', '');
+                        fd.append('cintura', '');
+                        fd.append('quadril', '');
+                    }
+
+                    if (prodImg) {
+                        try {
+                            const b = await fetch(prodImg).then(r => r.blob());
+                            fd.append('product_image', b, 'product.jpg');
+                        } catch (_) { }
+                    }
+
+                    calculateFinalSize();
+
+                    const res = await fetch(WEBHOOK_PROVA, { method: 'POST', body: fd });
+
+                    const contentType = res.headers.get("content-type") || "";
+                    if (contentType.includes("application/json")) {
+                        const data = await res.json();
+                        if (data.error) {
+                            document.getElementById('q-loading-box').style.display = 'none';
+                            photoStep.style.display = 'flex';
+                            if (data.error === "Chave invalida, vencida ou inativa." || data.error.includes("vencida ou inativa")) {
+                                showError();
+                            } else {
+                                alert(data.error);
+                            }
+                            return;
+                        }
+                    }
+
+                    if (res.ok) {
+                        const blob = await res.blob();
+                        document.getElementById('q-loading-box').style.display = 'none';
+                        document.getElementById('q-final-view-img').src = URL.createObjectURL(blob);
+                        document.querySelector('.q-card-ia').classList.add('is-result');
+                        document.getElementById('q-step-result').style.display = 'flex';
+                        loadRelatedProducts();
+                    } else if (res.status === 401 || res.status === 403) {
                         document.getElementById('q-loading-box').style.display = 'none';
                         photoStep.style.display = 'flex';
-                        if (data.error === "Chave invalida, vencida ou inativa." || data.error.includes("vencida ou inativa")) {
-                            showError();
-                        } else {
-                            alert(data.error);
-                        }
-                        return;
-                    }
-                }
-
-                if (res.ok) {
-                    const blob = await res.blob();
-                    document.getElementById('q-loading-box').style.display = 'none';
-                    document.getElementById('q-final-view-img').src = URL.createObjectURL(blob);
-                    document.querySelector('.q-card-ia').classList.add('is-result');
-                    document.getElementById('q-step-result').style.display = 'flex';
-                    loadRelatedProducts();
-                } else if (res.status === 401 || res.status === 403) {
+                        showError();
+                    } else { throw new Error(); }
+                } catch (e) {
                     document.getElementById('q-loading-box').style.display = 'none';
                     photoStep.style.display = 'flex';
                     showError();
-                } else { throw new Error(); }
-            } catch (e) {
-                document.getElementById('q-loading-box').style.display = 'none';
-                photoStep.style.display = 'flex';
-                showError();
+                }
+        
+
+            } finally {
+
+                runGeneration._busy = false;
+
             }
         }
+
+        
 
         genBtn.onclick = async () => {
             // Validação agressiva (UI feedback)
